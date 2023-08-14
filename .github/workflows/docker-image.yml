@@ -27,5 +27,5 @@ jobs:
         run: |
           docker buildx build --tag harsshh/examples/guestbook-go:${{ github.sha }} .
           docker buildx build --tag harsshh/examples/guestbook-go:latest .
-          docker push harsshh/guestbook-go:${{ github.sha }}
-          docker push harsshh/guestbook-go:latest
+          docker push harsshh/examples/guestbook-go:${{ github.sha }}
+          docker push harsshh/examples/guestbook-go:latest
