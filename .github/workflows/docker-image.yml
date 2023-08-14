@@ -25,8 +25,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker buildx build --tag harsshh/guest-book:${{ github.sha }} -f guestbook-go/Dockerfile .
-          docker buildx build --tag harsshh/guestbook-go:latest -f guestbook-go/Dockerfile .
+          docker buildx build --tag harsshh/guest-book:${{ github.sha }} -f guestbook-go/Dockerfile .github/workflows/
+          docker buildx build --tag harsshh/guestbook-go:latest -f guestbook-go/Dockerfile .github/workflows/
           docker push harsshh/guestbook-go:${{ github.sha }}
           docker push harsshh/guestbook-go:latest
 
