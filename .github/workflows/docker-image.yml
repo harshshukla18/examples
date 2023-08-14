@@ -52,8 +52,9 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker buildx create --use
-        docker buildx build --tag harsshh/myimage:latest guestbook-go/Dockerfile .
+        docker buildx create --name mybuilder
+        docker buildx create use mybuilder
+        docker buildx build --t myimage:latest guestbook-go/Dockerfile .
         docker buildx rm mybuilder
 
       env:
@@ -68,3 +69,14 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+
+        # Create a builder instance
+docker buildx create --name mybuilder
+
+# Set the builder as active
+docker buildx use mybuilder
+
+# Now you can use the builder for building images
+docker buildx build -t myimage:tag -f path/to/Dockerfile path/to/context
+
