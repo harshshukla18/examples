@@ -1,7 +1,6 @@
 name: Build Container Image
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -32,10 +31,10 @@ jobs:
             fi
           fi
 
-      - name: Set up Docker
+      - name: Install Docker
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
           sudo usermod -aG docker $USER
           sudo systemctl restart docker
 
@@ -44,7 +43,7 @@ jobs:
         run: |
           docker build -t your-username/guestbook-go:${{ github.sha }} guestbook-go
           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-          docker push your-username/guestbook-go:${{ github.sha }}
+          docker push harsshh/guestbook-go:${{ github.sha }}
 
   protect_main:
     runs-on: ubuntu-latest
