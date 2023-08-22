@@ -50,17 +50,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Protect main branch
-        uses: actions/github-script@v5
-        with:
-          script: |
-            github.repos.updateBranchProtection({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: 'main',
-              enforce_admins: true,
-              required_pull_request_reviews: {
-                required_approving_review_count: 1
-              }
-            })
+        run: |
+          OWNER=${{ github.repository_owner }}
+          REPO=${{ github.repository }}
+          BRANCH="main"
+          TOKEN=${{ secrets.GITHUB_TOKEN }}
+
+          URL="https://api.github.com/repos/$OWNER/$REPO/branches/$BRANCH/protection"
+          DATA="{\"enforce_admins\": true, \"required_pull_request_reviews\": {\"required_approving_review_count\": 1}}"
+
+          curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github.v3+json" -d "$DATA" $URL
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
