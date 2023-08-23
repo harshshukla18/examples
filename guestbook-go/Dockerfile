@@ -21,6 +21,7 @@ ADD ./main.go .
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 FROM scratch
+RUN apk add --no-cache go
 WORKDIR /app
 COPY --from=0 /app/main .
 COPY ./public/index.html public/index.html
