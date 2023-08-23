@@ -31,38 +31,21 @@
 # Use an official Go runtime as a base image
 FROM golang:1.16.0
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum files to the container
-COPY go.mod go.sum ./
+RUN go get -d github.com/codegangsta/negroni \
+        github.com/gorilla/mux \
+        github.com/xyproto/simpleredis
 
-# Download dependencies
-RUN go mod download
-
-# Copy the rest of the source code to the container
-COPY . .
-
-# Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-# Use a minimal base image for the final image
 FROM scratch
-
-# Set the working directory for the final image
 WORKDIR /app
-
-# Copy the binary from the build stage
 COPY --from=0 /app/main .
-
-# Copy other necessary files
 COPY ./public/index.html public/index.html
 COPY ./public/script.js public/script.js
 COPY ./public/style.css public/style.css
-
-# Define the command to run when the container starts
 CMD ["/app/main"]
-
-# Expose the necessary port
 EXPOSE 3000
+
 
