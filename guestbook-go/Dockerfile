@@ -13,15 +13,14 @@
 # limitations under the License.
 
 FROM golang:1.10.0
-RUN go get github.com/codegangsta/negroni \
+RUN sh -c "go get github.com/codegangsta/negroni \
            github.com/gorilla/mux \
-           github.com/xyproto/simpleredis
+           github.com/xyproto/simpleredis"
 WORKDIR /app
 ADD ./main.go .
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 FROM scratch
-RUN apk add --no-cache go
 WORKDIR /app
 COPY --from=0 /app/main .
 COPY ./public/index.html public/index.html
