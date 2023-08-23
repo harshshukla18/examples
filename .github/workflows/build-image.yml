@@ -99,6 +99,7 @@ jobs:
             echo "building container image."
           else
             echo "No need to build container image."
+            echo "come out"
           fi
         fi
       shell: /usr/bin/bash -e {0}
