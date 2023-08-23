@@ -1,66 +1,107 @@
+# name: Build Container Image
+
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - '*'
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Check commit message
+#         id: commit_check
+#         run: |
+#           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+#             echo "Commit message check not required for pull requests."
+#           else
+#             if [[ ${{ github.event.commits.*.message }} == *"BUILD_CONTAINER_IMAGE"* ]]; then
+#               echo "Commit message contains BUILD_CONTAINER_IMAGE."
+#               echo "::set-output name=build_trigger::true"
+#             else
+#               echo "Commit message does not contain BUILD_CONTAINER_IMAGE."
+#               echo "::set-output name=build_trigger::false"
+#             fi
+#           fi
+
+#       - name: Install Docker
+#         run: |
+#           curl -fsSL https://get.docker.com -o get-docker.sh
+#           sudo sh get-docker.sh
+#           sudo usermod -aG docker $USER
+#           sudo systemctl restart docker
+
+#       - name: Build and push Docker image
+#         if: ${{ steps.commit_check.outputs.build_trigger == 'true' || github.event_name == 'pull_request' }}
+#         run: |
+#           docker build -t your-username/guestbook-go:${{ github.sha }} guestbook-go
+#           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+#           docker push harsshh/guestbook-go:${{ github.sha }}
+
+#   protect_main:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Protect main branch
+#         run: |
+#           OWNER=${{ github.repository_owner }}
+#           REPO=${{ github.repository }}
+#           BRANCH="main"
+#           TOKEN=${{ secrets.GITHUB_TOKEN }}
+
+#           URL="https://api.github.com/repos/$OWNER/$REPO/branches/$BRANCH/protection"
+#           DATA="{\"enforce_admins\": true, \"required_pull_request_reviews\": {\"required_approving_review_count\": 1}}"
+
+#           curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github.v3+json" -d "$DATA" $URL
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
 name: Build Container Image
 
 on:
   workflow_dispatch:
+  pull_request:
+    types:
+      - closed
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - '*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Check commit message
-        id: commit_check
-        run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "Commit message check not required for pull requests."
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16.x
+
+    - name: Check PR merge or commit message
+      run: |
+        if [[ $GITHUB_EVENT_NAME == "push" ]]; then
+          if [[ $GITHUB_REF == "refs/heads/main" || $(echo "${{ github.event.head_commit.message }}" | grep -q "BUILD_CONTAINER_IMAGE"; echo $?) -eq 0 ]]; then
+            echo "Building container image..."
+            docker build -t harsshh/guestbook-go:latest .
+            docker login -u harsshh -p ${{ secrets.DOCKER_PASSWORD }}
+            docker push harsshh/guestbook-go:latest
+            echo "building container image."
           else
-            if [[ ${{ github.event.commits.*.message }} == *"BUILD_CONTAINER_IMAGE"* ]]; then
-              echo "Commit message contains BUILD_CONTAINER_IMAGE."
-              echo "::set-output name=build_trigger::true"
-            else
-              echo "Commit message does not contain BUILD_CONTAINER_IMAGE."
-              echo "::set-output name=build_trigger::false"
-            fi
+            echo "No need to build container image."
           fi
+        fi
+      shell: /usr/bin/bash -e {0}
+      env:
+        DOCKER_BUILDKIT: 1
 
-      - name: Install Docker
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
-          sudo usermod -aG docker $USER
-          sudo systemctl restart docker
-
-      - name: Build and push Docker image
-        if: ${{ steps.commit_check.outputs.build_trigger == 'true' || github.event_name == 'pull_request' }}
-        run: |
-          docker build -t your-username/guestbook-go:${{ github.sha }} guestbook-go
-          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-          docker push harsshh/guestbook-go:${{ github.sha }}
-
-  protect_main:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Protect main branch
-        uses: actions/github-script@v5
-        with:
-          script: |
-            github.repos.updateBranchProtection({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: 'main',
-              enforce_admins: true,
-              required_pull_request_reviews: {
-                required_approving_review_count: 1
-              }
-            })
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

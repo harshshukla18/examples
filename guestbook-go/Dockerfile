@@ -28,3 +28,6 @@ COPY ./public/script.js public/script.js
 COPY ./public/style.css public/style.css
 CMD ["/app/main"]
 EXPOSE 3000
+
+
+
