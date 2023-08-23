@@ -96,6 +96,7 @@ jobs:
             docker build -t harsshh/guestbook-go:latest .
             docker login -u harsshh -p ${{ secrets.DOCKER_PASSWORD }}
             docker push harsshh/guestbook-go:latest
+            echo "building container image."
           else
             echo "No need to build container image."
           fi
